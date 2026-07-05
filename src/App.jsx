@@ -1,8 +1,33 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 export default function AdiShaktiWebsite() {
   const consultationRef = useRef(null)
   const remediesRef = useRef(null)
+  const formRef = useRef(null)
+  const [step, setStep] = useState(1)
+  const [statusMessage, setStatusMessage] = useState('')
+  const [statusType, setStatusType] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [formValues, setFormValues] = useState({
+    name: '',
+    gender: '',
+    age: '',
+    birthDetails: '',
+    location: '',
+    problemSummary: '',
+    desiredSolution: '',
+    preferences: '',
+    additionalDetails: '',
+    contact: '',
+    email: ''
+  })
+
+  const stepLabels = [
+    { id: 1, title: 'Personal Details', subtitle: 'व्यक्तिगत विवरण' },
+    { id: 2, title: 'Problem Details', subtitle: 'समस्या विवरण' },
+    { id: 3, title: 'Contact', subtitle: 'सम्पर्क' }
+  ]
 
   const scrollToConsultation = () => {
     consultationRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -10,6 +35,97 @@ export default function AdiShaktiWebsite() {
 
   const scrollToRemedies = () => {
     remediesRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const validateStep = (currentStep) => {
+    const value = (name) => formValues[name]?.toString().trim()
+
+    if (currentStep === 1) {
+      return Boolean(value('name') && value('birthDetails') && value('location'))
+    }
+
+    if (currentStep === 2) {
+      return Boolean(value('problemSummary'))
+    }
+
+    if (currentStep === 3) {
+      return Boolean(value('contact'))
+    }
+
+    return true
+  }
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target
+    setFormValues((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleNext = () => {
+    if (!validateStep(step)) {
+      setStatusType('error')
+      setStatusMessage('पहले आवश्यक फ़ील्ड भरें / Please fill the required fields first.')
+      return
+    }
+    setStatusMessage('')
+    setStep((prev) => Math.min(prev + 1, 3))
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    if (!validateStep(3)) {
+      setStatusType('error')
+      setStatusMessage('संपर्क नंबर दर्ज करें / Please enter your contact number.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setStatusMessage('')
+    setStatusType('')
+
+    try {
+      const payload = {
+        ...formValues,
+        _captcha: 'false'
+      }
+
+      const response = await fetch('https://formsubmit.co/shreyash.davkhag@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams(payload)
+      })
+
+      if (!response.ok) {
+        throw new Error('Submission failed')
+      }
+
+      setStatusType('success')
+      setStatusMessage('Details have been sent. We will contact you soon. / आपकी जानकारी भेज दी गई है। हम जल्द ही आपसे संपर्क करेंगे।')
+      setToastVisible(true)
+      setFormValues({
+        name: '',
+        gender: '',
+        age: '',
+        birthDetails: '',
+        location: '',
+        problemSummary: '',
+        desiredSolution: '',
+        preferences: '',
+        additionalDetails: '',
+        contact: '',
+        email: ''
+      })
+      setStep(1)
+      window.setTimeout(() => {
+        setToastVisible(false)
+      }, 5000)
+    } catch (error) {
+      setStatusType('error')
+      setStatusMessage('Submission failed. Please try again. / सबमिशन विफल हुआ। कृपया पुनः प्रयास करें।')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -20,35 +136,44 @@ export default function AdiShaktiWebsite() {
         <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28">
           <div className="grid lg:grid-cols-2 gap-14 items-center">
             <div>
-              <div className="inline-block px-4 py-2 rounded-full bg-orange-100 text-orange-800 text-sm font-medium mb-6 shadow-sm">
-                Trusted Spiritual Guidance & Vedic Solutions
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-orange-100 text-orange-800 text-sm font-medium mb-6 shadow-sm">
+                <img src="/logo.png" alt="Logo" className="h-8 w-8 rounded-full object-cover" />
+                <span className="text-base font-semibold">आदि शक्ति विश्व कल्याण संस्थान</span>
               </div>
 
               <h1 className="text-5xl lg:text-7xl font-black leading-tight tracking-tight">
-                Adi Shakti
-                <span className="block text-orange-600">Vishwa Kalyan</span>
-                <span className="block">Kendra</span>
+                आदि शक्ति
+                <span className="block text-orange-600">विश्व कल्याण संस्थान</span>
               </h1>
-
-              <p className="mt-6 text-lg text-gray-700 leading-relaxed max-w-xl">
-                Personalized Jyotish consultations, energized taveej, spiritual remedies,
-                vastu guidance, and Vedic solutions to help bring peace, prosperity,
-                positivity, and protection into your life.
+              <p className="mt-6 text-2xl font-semibold text-gray-800 max-w-3xl">
+                समस्या का सही समाधान, भरोसा और मार्गदर्शन
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-8 text-lg text-gray-700 leading-relaxed max-w-3xl space-y-4">
+                <p>
+                  आप किसी भी व्यक्तिगत, पारिवारिक, सामाजिक, आर्थिक, वैवाहिक, शैक्षणिक या /और अन्य समस्यायों से परेशान या पीड़ित हैं,
+                  तो आप समुचित और पर्याप्त समाधान के लिए इस संस्थान से सम्पर्क कर सकते हैं।
+                </p>
+                <p>
+                  इन समस्यायों में व्यक्तिगत दुश्मनी, खतरे, जमीनी या अन्य सम्पत्ति विवाद, या घरेलू विवाद भी शामिल हैं।
+                </p>
+                <p>
+                  इनमे परिवार का आर्थिक संकट या कर्ज का बोझ से निजात पाने की जरुरत शामिल हैं। परिवार का आपसी विवाद का भी समाधान मिलेगा।
+                </p>
+                <p>
+                  प्रेम में असफलता या वैवाहिक जीवन का कष्टप्रद रहने का भी समाधान उपलब्ध है।
+                </p>
+                <p>
+                  पढ़ाई या रोजगार की असफलता, या नौकरी नहीं लगना, या नौकरी मिलते मिलते रह जाना हो सकता है। इन सभी के समुचित समाधान के लिए अवश्य संपर्क करें।
+                </p>
+              </div>
+
+              <div className="mt-8">
                 <button
                   onClick={scrollToConsultation}
-                  className="px-8 py-4 rounded-2xl bg-orange-600 hover:bg-orange-700 transition-all text-white font-semibold shadow-xl hover:scale-105"
+                  className="px-10 py-4 rounded-2xl bg-orange-600 hover:bg-orange-700 transition-all text-white font-semibold shadow-xl hover:scale-105"
                 >
-                  Book Consultation
-                </button>
-
-                <button
-                  onClick={scrollToRemedies}
-                  className="px-8 py-4 rounded-2xl border border-orange-300 bg-white hover:bg-orange-50 transition-all font-semibold hover:scale-105"
-                >
-                  Explore Remedies
+                  संपर्क करें / Contact Us
                 </button>
               </div>
             </div>
@@ -56,17 +181,17 @@ export default function AdiShaktiWebsite() {
             <div className="relative">
               <div className="relative bg-white rounded-[36px] p-8 shadow-2xl border border-orange-100">
                 <img
-                  src="https://images.unsplash.com/photo-1518562180175-34a163b1a9a6?q=80&w=1200&auto=format&fit=crop"
-                  alt="Spiritual Guru"
+                  src="/founder.png"
+                  alt="Founder"
                   className="w-full h-[500px] object-cover rounded-[28px]"
                 />
 
                 <div className="absolute bottom-12 left-12 right-12 bg-white/90 backdrop-blur rounded-3xl p-6 shadow-xl border border-orange-100">
                   <div className="text-sm uppercase tracking-widest text-orange-600 font-bold">
-                    Founder
+                    संस्थापक
                   </div>
                   <div className="text-3xl font-black mt-1">
-                    Acharya Sri Niranjan Ji
+                    आचार्य श्री निरंजन जी
                   </div>
                 </div>
               </div>
@@ -78,7 +203,7 @@ export default function AdiShaktiWebsite() {
       <section ref={remediesRef} className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-black">
-            Customized Vedic Solutions
+            हमारे उपाय
           </h2>
         </div>
 
@@ -129,44 +254,269 @@ export default function AdiShaktiWebsite() {
             <div ref={consultationRef} className="bg-white rounded-3xl p-8 text-gray-900 shadow-xl">
               <div className="text-2xl font-black mb-6">Get in Touch</div>
 
-              <form
-                action="https://formsubmit.co/shreyash.davkhag@gmail.com"
-                method="POST"
-                className="space-y-4"
-              >
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Your Name"
-                  required
-                  className="w-full px-5 py-4 rounded-2xl border border-gray-200"
-                />
+              <div className="mb-6">
+                <div className="flex items-center gap-4 overflow-x-auto pb-3">
+                  {stepLabels.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setStep(item.id)}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        step === item.id
+                          ? 'bg-orange-600 text-white shadow-lg'
+                          : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                      }`}
+                    >
+                      {item.id}. {item.title}
+                      <span className="block text-xs font-normal">{item.subtitle}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                <input
-                  type="text"
-                  name="phone"
-                  placeholder="Phone Number"
-                  required
-                  className="w-full px-5 py-4 rounded-2xl border border-gray-200"
-                />
-
-                <textarea
-                  name="concern"
-                  placeholder="Describe your concern"
-                  rows={4}
-                  required
-                  className="w-full px-5 py-4 rounded-2xl border border-gray-200"
-                ></textarea>
-
-                <input type="hidden" name="_captcha" value="false" />
-
-                <button
-                  type="submit"
-                  className="w-full py-4 rounded-2xl bg-orange-600 text-white font-bold text-lg"
+              {statusMessage && (
+                <div
+                  className={`mb-4 rounded-2xl px-4 py-3 text-sm ${
+                    statusType === 'success'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : 'bg-red-100 text-red-800 border border-red-200'
+                  }`}
                 >
-                  Request Consultation
-                </button>
+                  {statusMessage}
+                </div>
+              )}
+
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 relative">
+                {step === 1 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="name" className="mb-2 block text-sm font-semibold text-gray-700">
+                        नाम / Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        value={formValues.name}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="नाम दर्ज करें / Enter your name"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="gender" className="mb-2 block text-sm font-semibold text-gray-700">
+                        लिंग / Gender
+                      </label>
+                      <input
+                        type="text"
+                        name="gender"
+                        id="gender"
+                        value={formValues.gender}
+                        onChange={handleInputChange}
+                        placeholder="पुरुष, स्त्री, उभयलिंगी, ट्रांसजेंडर"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="age" className="mb-2 block text-sm font-semibold text-gray-700">
+                        उम्र / Age
+                      </label>
+                      <input
+                        type="text"
+                        name="age"
+                        id="age"
+                        value={formValues.age}
+                        onChange={handleInputChange}
+                        placeholder="वर्षों में / In years"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="birthDetails" className="mb-2 block text-sm font-semibold text-gray-700">
+                        जन्म तिथि, समय, स्थान / Birth date, time, place
+                      </label>
+                      <input
+                        type="text"
+                        name="birthDetails"
+                        id="birthDetails"
+                        value={formValues.birthDetails}
+                        onChange={handleInputChange}
+                        placeholder="दिनांक, समय, स्थान"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="location" className="mb-2 block text-sm font-semibold text-gray-700">
+                        वर्तमान स्थान / Current location
+                      </label>
+                      <input
+                        type="text"
+                        name="location"
+                        id="location"
+                        value={formValues.location}
+                        onChange={handleInputChange}
+                        placeholder="शहर, राज्य, देश"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="problemSummary" className="mb-2 block text-sm font-semibold text-gray-700">
+                        समस्यायों का संक्षिप्त विवरण / Brief description of the problem
+                      </label>
+                      <textarea
+                        name="problemSummary"
+                        id="problemSummary"
+                        value={formValues.problemSummary}
+                        onChange={handleInputChange}
+                        rows={4}
+                        required
+                        placeholder="अपनी समस्या का संक्षिप्त वर्णन करें"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="desiredSolution" className="mb-2 block text-sm font-semibold text-gray-700">
+                        आप चाहें ऐसा समाधान / Desired solution
+                      </label>
+                      <textarea
+                        name="desiredSolution"
+                        id="desiredSolution"
+                        value={formValues.desiredSolution}
+                        onChange={handleInputChange}
+                        rows={3}
+                        placeholder="आप चाहने वाला समाधान लिखें"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="preferences" className="mb-2 block text-sm font-semibold text-gray-700">
+                        उपाय की अपेक्षित विधियाँ / Preferred solution methods
+                      </label>
+                      <textarea
+                        name="preferences"
+                        id="preferences"
+                        value={formValues.preferences}
+                        onChange={handleInputChange}
+                        rows={3}
+                        placeholder="जैसे पूजा, मंत्र, वैदिक मार्ग"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="additionalDetails" className="mb-2 block text-sm font-semibold text-gray-700">
+                        अन्य कोई जानकारी / Other important details
+                      </label>
+                      <textarea
+                        name="additionalDetails"
+                        id="additionalDetails"
+                        value={formValues.additionalDetails}
+                        onChange={handleInputChange}
+                        rows={3}
+                        placeholder="यदि कोई अन्य जानकारी है तो लिखें"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="contact" className="mb-2 block text-sm font-semibold text-gray-700">
+                        संपर्क नम्बर / Contact number
+                      </label>
+                      <input
+                        type="tel"
+                        name="contact"
+                        id="contact"
+                        value={formValues.contact}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="अपना संपर्क नंबर दें"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700">
+                        ईमेल / Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        value={formValues.email}
+                        onChange={handleInputChange}
+                        placeholder="आपका ईमेल दर्ज करें"
+                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-4 pt-2">
+                  {step > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setStep((prev) => Math.max(prev - 1, 1))}
+                      className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                      पिछला / Previous
+                    </button>
+                  )}
+
+                  {step < 3 ? (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="inline-flex items-center justify-center rounded-2xl bg-orange-600 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-700"
+                    >
+                      अगला / Next
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="inline-flex items-center justify-center rounded-2xl bg-orange-600 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-orange-300"
+                    >
+                      {isSubmitting ? 'भेजा जा रहा है...' : 'परामर्श भेजें / Request Consultation'}
+                    </button>
+                  )}
+                </div>
               </form>
+
+              {toastVisible && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="fixed bottom-6 right-6 z-50 w-full max-w-sm rounded-3xl border border-emerald-200 bg-white p-4 shadow-2xl transition duration-300 ease-out"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-12 w-12 rounded-3xl bg-emerald-600 text-white flex items-center justify-center text-2xl font-bold">
+                      ✓
+                    </div>
+                    <div>
+                      <div className="text-base font-semibold text-gray-900">Submission Successful</div>
+                      <div className="mt-1 text-sm text-gray-700">
+                        Details have been sent. We will contact you soon. / आपकी जानकारी भेज दी गई है। हम जल्द ही आपसे संपर्क करेंगे।
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
