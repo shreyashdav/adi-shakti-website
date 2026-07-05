@@ -60,6 +60,29 @@ export default function AdiShaktiWebsite() {
     setFormValues((prev) => ({ ...prev, [name]: value }))
   }
 
+  const canGoToStep = (targetStep) => {
+    if (targetStep === 1) return true
+    if (targetStep === 2) return validateStep(1)
+    if (targetStep === 3) return validateStep(1) && validateStep(2)
+    return false
+  }
+
+  const validateAll = () => {
+    const required = ['name', 'birthDetails', 'location', 'problemSummary', 'contact']
+    return required.every((field) => formValues[field]?.toString().trim())
+  }
+
+  const handleStepClick = (targetStep) => {
+    if (targetStep === step) return
+    if (!canGoToStep(targetStep)) {
+      setStatusType('error')
+      setStatusMessage('पहले पिछले चरणों की जानकारी भरें। / Please complete the previous steps first.')
+      return
+    }
+    setStatusMessage('')
+    setStep(targetStep)
+  }
+
   const handleNext = () => {
     if (!validateStep(step)) {
       setStatusType('error')
@@ -72,9 +95,9 @@ export default function AdiShaktiWebsite() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (!validateStep(3)) {
+    if (!validateAll()) {
       setStatusType('error')
-      setStatusMessage('संपर्क नंबर दर्ज करें / Please enter your contact number.')
+      setStatusMessage('कृपया सभी आवश्यक जानकारी भरें। / Please fill all required details.')
       return
     }
 
@@ -256,21 +279,27 @@ export default function AdiShaktiWebsite() {
 
               <div className="mb-6">
                 <div className="flex items-center gap-4 overflow-x-auto pb-3">
-                  {stepLabels.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setStep(item.id)}
-                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                        step === item.id
-                          ? 'bg-orange-600 text-white shadow-lg'
-                          : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                      }`}
-                    >
-                      {item.id}. {item.title}
-                      <span className="block text-xs font-normal">{item.subtitle}</span>
-                    </button>
-                  ))}
+                  {stepLabels.map((item) => {
+                    const enabled = canGoToStep(item.id)
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleStepClick(item.id)}
+                        disabled={!enabled}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                          step === item.id
+                            ? 'bg-orange-600 text-white shadow-lg'
+                            : enabled
+                            ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        {item.id}. {item.title}
+                        <span className="block text-xs font-normal">{item.subtitle}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
