@@ -1,9 +1,13 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import About from './About'
+import FAQ from './FAQ'
 
 export default function AdiShaktiWebsite() {
+  const topRef = useRef(null)
   const consultationRef = useRef(null)
-  const remediesRef = useRef(null)
   const formRef = useRef(null)
+  const [currentPage, setCurrentPage] = useState('home')
+  const [pendingScroll, setPendingScroll] = useState(null)
   const [step, setStep] = useState(1)
   const [statusMessage, setStatusMessage] = useState('')
   const [statusType, setStatusType] = useState('')
@@ -17,7 +21,6 @@ export default function AdiShaktiWebsite() {
     location: '',
     problemSummary: '',
     desiredSolution: '',
-    preferences: '',
     additionalDetails: '',
     contact: '',
     email: ''
@@ -29,13 +32,62 @@ export default function AdiShaktiWebsite() {
     { id: 3, title: 'Contact', subtitle: 'सम्पर्क' }
   ]
 
-  const scrollToConsultation = () => {
-    consultationRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const testimonials = [
+    {
+      name: 'राधा शर्मा',
+      age: '34',
+      rating: 5,
+      message: 'मुझे बहुत सहारा मिला। यहां पर मैंने सही मार्गदर्शन और स्थायी समाधान दोनों पाया।'
+    },
+    {
+      name: 'अजय वर्मा',
+      age: '42',
+      rating: 4,
+      message: 'समस्या की गहराई से समीक्षा हुई और उचित उपाय सुझाए गए। परिणाम सकारात्मक रहे।'
+    },
+    {
+      name: 'नीतू कुमारी',
+      age: '29',
+      rating: 5,
+      message: 'मेरे परिवार के विवाद का समाधान मिला। अनुभव बहुत अच्छा और भरोसेमंद रहा।'
+    },
+    {
+      name: 'सौरभ सिंह',
+      age: '38',
+      rating: 5,
+      message: 'समस्या का समाधान जल्दी मिला और टीम ने पूरे दिल से सहायता की।'
+    }
+  ]
+
+  const scrollToHome = () => {
+    setCurrentPage('home')
+    topRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const scrollToRemedies = () => {
-    remediesRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const scrollToAbout = () => {
+    setCurrentPage('about')
   }
+
+  const scrollToFAQs = () => {
+    setCurrentPage('faq')
+  }
+
+  const handleContactNav = () => {
+    setCurrentPage('home')
+    setPendingScroll('consultation')
+  }
+
+  const scrollToConsultation = () => {
+    setCurrentPage('home')
+    setPendingScroll('consultation')
+  }
+
+  useEffect(() => {
+    if (currentPage === 'home' && pendingScroll === 'consultation') {
+      consultationRef.current?.scrollIntoView({ behavior: 'smooth' })
+      setPendingScroll(null)
+    }
+  }, [currentPage, pendingScroll])
 
   const validateStep = (currentStep) => {
     const value = (name) => formValues[name]?.toString().trim()
@@ -153,7 +205,48 @@ export default function AdiShaktiWebsite() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-yellow-50 text-gray-900">
-      <section className="relative overflow-hidden">
+      <header className="sticky top-0 z-40 border-b border-orange-100 bg-white/90 backdrop-blur-md shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Logo" className="h-10 w-10 rounded-full object-cover" />
+            <div>
+              <div className="text-base font-bold text-orange-600">आदि शक्ति</div>
+              <div className="text-sm text-gray-600">विश्व कल्याण संस्थान</div>
+            </div>
+          </div>
+
+          <nav className="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-700">
+            <button
+              onClick={scrollToHome}
+              className={`${currentPage === 'home' ? 'text-orange-600' : 'hover:text-orange-600'}`}
+            >
+              Home
+            </button>
+            <button
+              onClick={scrollToAbout}
+              className={`${currentPage === 'about' ? 'text-orange-600' : 'hover:text-orange-600'}`}
+            >
+              About Us
+            </button>
+            <button
+              onClick={scrollToFAQs}
+              className={`${currentPage === 'faq' ? 'text-orange-600' : 'hover:text-orange-600'}`}
+            >
+              FAQs
+            </button>
+            <button
+              onClick={handleContactNav}
+              className="rounded-full bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+            >
+              Contact Us
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {currentPage === 'home' ? (
+        <>
+          <section ref={topRef} className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-200/30 to-yellow-200/20 blur-3xl"></div>
 
         <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28">
@@ -213,8 +306,8 @@ export default function AdiShaktiWebsite() {
                   <div className="text-sm uppercase tracking-widest text-orange-600 font-bold">
                     संस्थापक
                   </div>
-                  <div className="text-3xl font-black mt-1">
-                    आचार्य श्री निरंजन जी
+                  <div className="text-3xl font-black mt-1 text-center">
+                    आचार्य प्रवर निरंजन जी
                   </div>
                 </div>
               </div>
@@ -223,34 +316,52 @@ export default function AdiShaktiWebsite() {
         </div>
       </section>
 
-      <section ref={remediesRef} className="max-w-7xl mx-auto px-6 py-20">
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="text-center mb-14">
+          <h2 className="text-4xl lg:text-5xl font-black">Testimonials</h2>
+          <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
+            हमारे संतुष्ट ग्राहकों की कुछ प्रतिक्रियाएँ।
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {testimonials.map((item) => (
+            <div key={item.name} className="rounded-[32px] border border-orange-100 bg-white p-6 shadow-xl transition hover:-translate-y-1 hover:shadow-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">{item.name}</p>
+                  <p className="text-sm text-gray-500">Age {item.age}</p>
+                </div>
+                <div className="text-orange-500 text-lg">
+                  {Array.from({ length: item.rating }).map((_, starIndex) => (
+                    <span key={starIndex}>★</span>
+                  ))}
+                </div>
+              </div>
+              <p className="text-gray-700 leading-relaxed">“{item.message}”</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-black">
             हमारे उपाय
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {[
             {
-              title: 'Customized Taveej',
-              desc: 'Energized spiritual taveej crafted for protection, prosperity, and positivity.',
-              emoji: '🧿'
-            },
-            {
-              title: 'Kundli Analysis',
-              desc: 'Detailed horoscope reading for career, marriage, health, and finances.',
-              emoji: '🔯'
-            },
-            {
-              title: 'Vastu Guidance',
-              desc: 'Balance home and workplace energies with traditional vastu consultation.',
-              emoji: '🏡'
-            },
-            {
-              title: 'Spiritual Remedies',
-              desc: 'Personalized mantras, pooja, yantra, and ritual-based remedies.',
+              title: 'Religious & Spiritual Remedies',
+              desc: 'Personalized mantras, pooja, yantra, advices and ritual-based remedies.',
               emoji: '🪔'
+            },
+            {
+              title: 'Customized Charged Tantra',
+              desc: 'Energized religious and spiritual tantra crafted for protection, prosperity, and positivity.',
+              emoji: '🧿'
             }
           ].map((service) => (
             <div
@@ -265,13 +376,18 @@ export default function AdiShaktiWebsite() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-20">
-        <div className="rounded-[40px] overflow-hidden bg-gradient-to-r from-orange-700 to-yellow-600 p-10 lg:p-16 text-white shadow-2xl">
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            <div>
-              <h2 className="text-4xl lg:text-5xl font-black leading-tight">
-                Book Your Personalized Consultation Today
-              </h2>
+      <section className="max-w-7xl mx-auto px-6 pb-20">
+        <div className="rounded-[40px] overflow-hidden bg-gradient-to-r from-orange-700 to-yellow-600 p-8 lg:p-14 text-white shadow-2xl">
+          <div className="grid lg:grid-cols-[0.95fr_1.4fr] gap-8 items-start">
+            <div className="max-w-xl">
+              <div className="rounded-[32px] border border-white/20 bg-white/10 p-8 shadow-inner">
+                <h2 className="text-3xl lg:text-4xl font-black leading-tight">
+                  Book Your Personalized Consultation Today
+                </h2>
+                <p className="mt-4 text-base lg:text-lg text-white/90 leading-relaxed">
+                  सीधे यहाँ अपना फॉर्म भरें और हमें अपनी समस्या बताएं। हमारी टीम जल्द ही आपको संपर्क करेगी।
+                </p>
+              </div>
             </div>
 
             <div ref={consultationRef} className="bg-white rounded-3xl p-8 text-gray-900 shadow-xl">
@@ -416,7 +532,7 @@ export default function AdiShaktiWebsite() {
 
                     <div>
                       <label htmlFor="desiredSolution" className="mb-2 block text-sm font-semibold text-gray-700">
-                        आप चाहें ऐसा समाधान / Desired solution
+                        ऐच्छिक समाधान / Desired solution
                       </label>
                       <textarea
                         name="desiredSolution"
@@ -430,23 +546,8 @@ export default function AdiShaktiWebsite() {
                     </div>
 
                     <div>
-                      <label htmlFor="preferences" className="mb-2 block text-sm font-semibold text-gray-700">
-                        उपाय की अपेक्षित विधियाँ / Preferred solution methods
-                      </label>
-                      <textarea
-                        name="preferences"
-                        id="preferences"
-                        value={formValues.preferences}
-                        onChange={handleInputChange}
-                        rows={3}
-                        placeholder="जैसे पूजा, मंत्र, वैदिक मार्ग"
-                        className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 outline-none transition focus:border-orange-500"
-                      />
-                    </div>
-
-                    <div>
                       <label htmlFor="additionalDetails" className="mb-2 block text-sm font-semibold text-gray-700">
-                        अन्य कोई जानकारी / Other important details
+                        अन्य कोई जानकारी / Other important information 
                       </label>
                       <textarea
                         name="additionalDetails"
@@ -550,6 +651,26 @@ export default function AdiShaktiWebsite() {
           </div>
         </div>
       </section>
+        </>
+      ) : currentPage === 'about' ? (
+        <About />
+      ) : (
+        <FAQ />
+      )}
+
+      <footer className="border-t border-orange-200 bg-orange-50 py-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid gap-6 md:grid-cols-[auto_1fr] items-center">
+            <img src="/logo.png" alt="Logo" className="h-16 w-16 rounded-3xl border border-orange-200 bg-white p-2 object-cover" />
+            <div className="text-gray-700 text-sm md:text-base">
+              <div className="font-semibold text-gray-900">आदि शक्ति विश्व कल्याण संस्थान</div>
+              <div>Address: 123 शांति मार्ग, वैदिक नगर, नई दिल्ली - 110001</div>
+              <div>Phone: +91 98765 43210 | Email: contact@adishakti.org</div>
+              <div>सम्पूर्ण समस्याओं के लिए परामर्श, उपाय और मार्गदर्शन उपलब्ध हैं।</div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
